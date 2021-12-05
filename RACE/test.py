@@ -84,8 +84,8 @@ def main(args):
         inp_id = passage_encodings_dict['input_ids']
         inp_att_msk = passage_encodings_dict['attention_mask']
         count+=1
-        if count==20:
-            break
+        # if count==20:
+        #     break
         print(count)
 
         all_generated_ids = model.generate(
@@ -106,7 +106,7 @@ def main(args):
         for generated_ids in all_generated_ids:
             genQu = tokenizer.decode(generated_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True)
             all_generated_questions.append(genQu)
-            all_contexts.append(context)
+            all_contexts.append(context.replace('/n', ' '))
 
     with open("gen_questions.txt", 'w') as f:
         f.writelines("%s\n" % qu for qu in all_generated_questions)
