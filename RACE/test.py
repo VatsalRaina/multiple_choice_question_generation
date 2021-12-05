@@ -79,7 +79,7 @@ def main(args):
 
     for item in test_data:
         context = item["article"]
-        passage_encodings_dict = tokenizer(context, truncation=True, max_length=MAXLEN_passage, padding="max_length")
+        passage_encodings_dict = tokenizer(context, truncation=True, max_length=MAXLEN_passage, padding="max_length", return_tensors="pt")
         inp_id = passage_encodings_dict['input_ids']
         inp_att_msk = passage_encodings_dict['attention_mask']
         count+=1
