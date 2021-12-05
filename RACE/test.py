@@ -35,6 +35,7 @@ def format_time(elapsed):
 
 # Set device
 def get_default_device():
+    return torch.device('cpu')
     if torch.cuda.is_available():
         print("Got CUDA!")
         return torch.device('cuda')
