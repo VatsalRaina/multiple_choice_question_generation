@@ -57,7 +57,7 @@ def main(args):
         f.write(' '.join(sys.argv) + '\n')
         f.write('--------------------------------\n')
 
-    with open(args.question_path, 'r') as f:
+    with open(args.questions_path, 'r') as f:
         all_gen_questions = [a.rstrip() for a in f.readlines()]
 
     with open(args.contexts_path, 'r') as f:
