@@ -26,6 +26,8 @@ def organise_data(questions, contexts):
                 opt = question[:sep_pos]
                 opts.append(opt)
         curr_point = {'question': qu, 'context': context, 'options':opts, 'label':0}
+        print(curr_point)
+        break
         organised_data.append(curr_point)
     return organised_data
 
