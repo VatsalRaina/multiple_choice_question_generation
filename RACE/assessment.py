@@ -15,7 +15,7 @@ MAXLEN = 512
 parser = argparse.ArgumentParser(description='Get all command line arguments.')
 parser.add_argument('--questions_path', type=str,  help='Specify path to generated questions')
 parser.add_argument('--contexts_path', type=str,  help='Specify path to contexts')
-parser.add_argument('models_dir', type=str, help='Specify path to directory containing all trained models')
+parser.add_argument('--models_dir', type=str, help='Specify path to directory containing all trained models')
 
 def get_default_device():
     if torch.cuda.is_available():
