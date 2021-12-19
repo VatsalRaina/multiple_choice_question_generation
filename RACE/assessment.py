@@ -16,6 +16,8 @@ parser = argparse.ArgumentParser(description='Get all command line arguments.')
 parser.add_argument('--questions_path', type=str,  help='Specify path to generated questions')
 parser.add_argument('--contexts_path', type=str,  help='Specify path to contexts')
 parser.add_argument('--models_dir', type=str, help='Specify path to directory containing all trained models')
+parser.add_argument('--batch_size', type=int, default=4, help='Specify the training batch size')
+
 
 def get_default_device():
     if torch.cuda.is_available():
@@ -65,7 +67,7 @@ def clean(test_data):
     """
     clean_data = []
     for ex in test_data:
-        question, context, options = test_data['question'], test_data['context'], test_data['options']
+        question, context, options = ex['question'], ex['context'], ex['options']
         if len(options) !=4:
             last_option = options[-1]
             while len(options) < 4:
@@ -76,7 +78,7 @@ def clean(test_data):
         
 
 
-def get_qa_predictions(test_data, models, device):
+def get_qa_predictions(test_data, models, device, args):
 
     repeated_data = clean(test_data)
     test_data = repeated_data
@@ -88,7 +90,7 @@ def get_qa_predictions(test_data, models, device):
     token_type_ids = []
     count = 0
     for ex in test_data:
-        question, context, options = test_data['question'], test_data['context'], test_data['options']
+        question, context, options = ex['question'], ex['context'], ex['options']
         four_inp_ids = []
         four_tok_type_ids = []
         for opt in options:
@@ -187,7 +189,7 @@ def main(args):
         model.eval().to(device)
         models.append(model)
     
-    all_logits = get_qa_predictions(organised_data, models, device)
+    all_logits = get_qa_predictions(organised_data, models, device, args)
 
     # frac_unans = get_unanswerability(all_logits)
 
