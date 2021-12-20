@@ -6,6 +6,7 @@ import torch
 from torch.utils.data import TensorDataset, DataLoader
 import numpy as np
 from numpy.lib.arraysetops import unique
+from scipy.special import softmax
 
 from transformers import ElectraTokenizer, ElectraForMultipleChoice, ElectraConfig
 from keras.preprocessing.sequence import pad_sequences
@@ -142,10 +143,19 @@ def get_qa_predictions(test_data, models, device, args):
     logits_all_models = np.asarray(logits_all_models)
     return logits_all_models
 
+def expected_entropy_class(probs, epsilon=1e-10):
+    """
+    :param probs: array [num_models, num_examples, num_classes]
+    :return: array [num_examples}
+    """
+    log_probs = -np.log(probs + epsilon)
 
+    return np.mean(np.sum(probs * log_probs, axis=2), axis=0)
 
 def get_unanswerability(all_logits):
-    pass
+    probs = softmax(all_logits, axis=-1)
+    exe = expected_entropy_class(probs)
+    return np.mean(exe)
 
 def get_accuracy(all_logits):
     ens_logits = np.mean(all_logits, axis=0)
@@ -191,7 +201,8 @@ def main(args):
     
     all_logits = get_qa_predictions(organised_data, models, device, args)
 
-    # frac_unans = get_unanswerability(all_logits)
+    frac_unans = get_unanswerability(all_logits)
+    print("Fraction unanswerability:", frac_unans)
 
     frac_acc = get_accuracy(all_logits)
     print("Fraction accuracy:", frac_acc)
