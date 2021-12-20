@@ -16,8 +16,10 @@ MAXLEN = 512
 parser = argparse.ArgumentParser(description='Get all command line arguments.')
 parser.add_argument('--questions_path', type=str,  help='Specify path to generated questions')
 parser.add_argument('--contexts_path', type=str,  help='Specify path to contexts')
-parser.add_argument('--models_dir', type=str, help='Specify path to directory containing all trained models')
+parser.add_argument('--models_dir', type=str, help='Specify path to directory containing all trained QA models')
+parser.add_argument('--models_complexity_dir', type=str, help='Specify path to directory containing all trained complexity models')
 parser.add_argument('--batch_size', type=int, default=4, help='Specify the training batch size')
+
 
 
 def get_default_device():
@@ -167,9 +169,65 @@ def get_accuracy(all_logits):
 
     return num_correct / len(class_preds)
 
+def get_complexity_predictions(test_data, models, device, args):
 
-def get_complexity():
-    pass
+    repeated_data = clean(test_data)
+    test_data = repeated_data
+
+    electra_large = "google/electra-large-discriminator"
+    tokenizer = ElectraTokenizer.from_pretrained(electra_large, do_lower_case=True)
+
+    input_ids = []
+    token_type_ids = []
+    attention_masks = []
+
+    for ex in test_data:
+        question, context, options = ex['question'], ex['context']
+        combo = question + " [SEP] " + context
+        input_encodings_dict = tokenizer(combo, truncation=True, max_length=MAXLEN, padding="max_length")
+        inp_ids = input_encodings_dict['input_ids']
+        inp_att_msk = input_encodings_dict['attention_mask']
+        tok_type_ids = [0 if i<= inp_ids.index(102) else 1 for i in range(len(inp_ids))]
+        input_ids.append(inp_ids)
+        token_type_ids.append(tok_type_ids)
+        attention_masks.append(inp_att_msk)
+
+    input_ids = torch.tensor(input_ids)
+    input_ids = input_ids.long().to(device)
+    token_type_ids = torch.tensor(token_type_ids)
+    token_type_ids = token_type_ids.long().to(device)
+    attention_masks = torch.tensor(attention_masks)
+    attention_masks = attention_masks.long().to(device)
+
+    ds = TensorDataset(input_ids, token_type_ids, attention_masks)
+    dl = DataLoader(ds, batch_size=args.batch_size, shuffle=False)
+
+    logits_all_models = []
+    for i, model in enumerate(models):
+        print("Model:", i)
+        logits = []
+        count = 0
+        for inp_id, tok_typ_id, att_msk in dl:
+            print(count)
+            count+=1
+            inp_id, tok_typ_id, att_msk = inp_id.to(device), tok_typ_id.to(device), att_msk.to(device)
+            with torch.no_grad():
+                outputs = model(input_ids=inp_id, attention_mask=att_msk, token_type_ids=tok_typ_id)
+            curr_logits = outputs[0]
+            logits += curr_logits.detach().cpu().numpy().tolist()
+        logits_all_models.append(logits)
+    logits_all_models = np.asarray(logits_all_models)
+    return logits_all_models
+
+def get_complexity(all_logits):
+    ens_logits = np.mean(all_logits, axis=0)
+    class_preds = np.argmax(ens_logits, axis=-1)
+    class_counts = [0, 0, 0]
+    for pred in class_preds:
+        class_counts[pred] = class_counts[pred] + 1
+    class_counts = np.asarray(class_counts)
+    class_fracs = class_counts / np.sum(class_counts)
+    return class_fracs
 
 def main(args):
     if not os.path.isdir('CMDs'):
@@ -191,21 +249,35 @@ def main(args):
 
 
     device = get_default_device()
-    models = []
-    seeds = [1, 2, 3, 4, 5, 6, 17, 8, 9, 10]
+    # models = []
+    # seeds = [1, 2, 3, 4, 5, 6, 17, 8, 9, 10]
+    # for seed in seeds:
+    #     model_path = args.models_dir + str(seed) + '/electra_QA_MC_seed' + str(seed) + '.pt'
+    #     model = torch.load(model_path, map_location=device)
+    #     model.eval().to(device)
+    #     models.append(model)
+    
+    # all_logits = get_qa_predictions(organised_data, models, device, args)
+
+    # frac_unans = get_unanswerability(all_logits)
+    # print("Unanswerability score:", frac_unans)
+
+    # frac_acc = get_accuracy(all_logits)
+    # print("Fraction accuracy:", frac_acc)
+
+    complexity_models = []
+    seeds = [1, 2, 3, 4, 5]
     for seed in seeds:
-        model_path = args.models_dir + str(seed) + '/electra_QA_MC_seed' + str(seed) + '.pt'
+        model_path = args.models_complexity_dir + str(seed) + '/electra_seed1' + str(seed) + '.pt'
         model = torch.load(model_path, map_location=device)
         model.eval().to(device)
-        models.append(model)
-    
-    all_logits = get_qa_predictions(organised_data, models, device, args)
+        complexity_models.append(model)
 
-    frac_unans = get_unanswerability(all_logits)
-    print("Fraction unanswerability:", frac_unans)
+    all_complexity_logits = get_complexity_predictions(organised_data, complexity_models, device, args)
 
-    frac_acc = get_accuracy(all_logits)
-    print("Fraction accuracy:", frac_acc)
+    complexity = get_complexity(all_complexity_logits)
+    print("Complexities: easy-medium-hard:", complexity)
+
 
 if __name__ == '__main__':
     args = parser.parse_args()
