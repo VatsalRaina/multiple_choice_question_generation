@@ -182,7 +182,7 @@ def get_complexity_predictions(test_data, models, device, args):
     attention_masks = []
 
     for ex in test_data:
-        question, context, options = ex['question'], ex['context']
+        question, context = ex['question'], ex['context']
         combo = question + " [SEP] " + context
         input_encodings_dict = tokenizer(combo, truncation=True, max_length=MAXLEN, padding="max_length")
         inp_ids = input_encodings_dict['input_ids']
