@@ -15,8 +15,8 @@ from transformers import T5ForConditionalGeneration, T5Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 
 
-MAXLEN_passage = 400
-MAXLEN_question = 400
+MAXLEN_passage = 512
+MAXLEN_question = 512
 
 parser = argparse.ArgumentParser(description='Get all command line arguments.')
 parser.add_argument('--model_path', type=str, help='Load path of trained model')
@@ -91,11 +91,11 @@ def main(args):
         all_generated_ids = model.generate(
             input_ids=inp_id,
             attention_mask=inp_att_msk,
-            num_beams=args.num_beams, # Less variability
-            #do_sample=True,
-            #top_k=50,           # This parameter and the one below create more question variability but reduced quality of questions
-            #top_p=0.95,          
-            max_length=400,
+            # num_beams=args.num_beams, # Less variability
+            do_sample=True,
+            top_k=50,           # This parameter and the one below create more question variability but reduced quality of questions
+            top_p=0.95,          
+            max_length=512,
             repetition_penalty=2.5,
             length_penalty=1.0,
             early_stopping=True,
