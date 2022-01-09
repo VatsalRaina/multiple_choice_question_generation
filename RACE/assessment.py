@@ -249,34 +249,34 @@ def main(args):
 
 
     device = get_default_device()
-    # models = []
-    # seeds = [1, 2, 3, 4, 5, 6, 17, 8, 9, 10]
-    # for seed in seeds:
-    #     model_path = args.models_dir + str(seed) + '/electra_QA_MC_seed' + str(seed) + '.pt'
-    #     model = torch.load(model_path, map_location=device)
-    #     model.eval().to(device)
-    #     models.append(model)
-    
-    # all_logits = get_qa_predictions(organised_data, models, device, args)
-
-    # frac_unans = get_unanswerability(all_logits)
-    # print("Unanswerability score:", frac_unans)
-
-    # frac_acc = get_accuracy(all_logits)
-    # print("Fraction accuracy:", frac_acc)
-
-    complexity_models = []
-    seeds = [1, 2, 3, 4, 5]
+    models = []
+    seeds = [1, 2, 3, 4, 5, 6, 17, 8, 9, 10]
     for seed in seeds:
-        model_path = args.models_complexity_dir + str(seed) + '/electra_seed' + str(seed) + '.pt'
+        model_path = args.models_dir + str(seed) + '/electra_QA_MC_seed' + str(seed) + '.pt'
         model = torch.load(model_path, map_location=device)
         model.eval().to(device)
-        complexity_models.append(model)
+        models.append(model)
+    
+    all_logits = get_qa_predictions(organised_data, models, device, args)
 
-    all_complexity_logits = get_complexity_predictions(organised_data, complexity_models, device, args)
+    frac_unans = get_unanswerability(all_logits)
+    print("Unanswerability score:", frac_unans)
 
-    complexity = get_complexity(all_complexity_logits)
-    print("Complexities: easy-medium-hard:", complexity)
+    frac_acc = get_accuracy(all_logits)
+    print("Fraction accuracy:", frac_acc)
+
+    # complexity_models = []
+    # seeds = [1, 2, 3, 4, 5]
+    # for seed in seeds:
+    #     model_path = args.models_complexity_dir + str(seed) + '/electra_seed' + str(seed) + '.pt'
+    #     model = torch.load(model_path, map_location=device)
+    #     model.eval().to(device)
+    #     complexity_models.append(model)
+
+    # all_complexity_logits = get_complexity_predictions(organised_data, complexity_models, device, args)
+
+    # complexity = get_complexity(all_complexity_logits)
+    # print("Complexities: easy-medium-hard:", complexity)
 
 
 if __name__ == '__main__':
