@@ -23,6 +23,7 @@ parser.add_argument('--model_path', type=str, help='Load path of trained model')
 parser.add_argument('--num_beams', type=int, default=1, help='Number of beams')
 parser.add_argument('--num_return_sequences', type=int, default=1, help='Number of return sequences')
 parser.add_argument('--test_data_path', type=str, help='Load path of training data')
+parser.add_argument('--save_path', type=str, help='Path to save generated text')
 
 def format_time(elapsed):
     '''
@@ -109,10 +110,10 @@ def main(args):
             all_generated_questions.append(genQu)
             all_contexts.append(context.replace('\n', ' '))
 
-    with open("gen_questions.txt", 'w') as f:
+    with open(args.save_path+"gen_questions.txt", 'w') as f:
         f.writelines("%s\n" % qu for qu in all_generated_questions)
 
-    with open("contexts.txt", 'w') as f:
+    with open(args.save_path+"contexts.txt", 'w') as f:
         f.writelines("%s\n" % qu for qu in all_contexts)
 
 if __name__ == '__main__':
