@@ -21,6 +21,7 @@ MAXLEN_question = 512
 parser = argparse.ArgumentParser(description='Get all command line arguments.')
 parser.add_argument('--model_path', type=str, help='Load path of trained model')
 parser.add_argument('--num_beams', type=int, default=1, help='Number of beams')
+parser.add_argument('--num_return_sequences', type=int, default=1, help='Number of return sequences')
 parser.add_argument('--test_data_path', type=str, help='Load path of training data')
 
 def format_time(elapsed):
@@ -100,7 +101,7 @@ def main(args):
             length_penalty=1.0,
             early_stopping=True,
             use_cache=True,
-            num_return_sequences=1
+            num_return_sequences=args.num_return_sequences
         )
         #print(len(all_generated_ids))
         for generated_ids in all_generated_ids:
