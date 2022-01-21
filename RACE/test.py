@@ -22,7 +22,8 @@ parser = argparse.ArgumentParser(description='Get all command line arguments.')
 parser.add_argument('--model_path', type=str, help='Load path of trained model')
 parser.add_argument('--num_beams', type=int, default=1, help='Number of beams')
 parser.add_argument('--num_return_sequences', type=int, default=1, help='Number of return sequences')
-parser.add_argument('--test_data_path', type=str, help='Load path of training data')
+parser.add_argument('--test_data_path', type=str, help='Load path of test data')
+parser.add_argument('--part_num', type=int, default=0, help='Indicate which fraction of data to generate samples on')
 parser.add_argument('--save_path', type=str, help='Path to save generated text')
 
 def format_time(elapsed):
@@ -80,7 +81,28 @@ def main(args):
     all_generated_questions = []
     all_contexts = []
 
-    for item in test_data:
+    if args.part_num == 0:
+        start = 0
+        end = len(test_data)
+    elif args.part_num == 1:
+        start = 0
+        end = 5000
+    elif args.part_num == 2:
+        start = 5000
+        end = 10000
+    elif args.part_num == 3:
+        start = 10000
+        end = 15000
+    elif args.part_num == 4:
+        start = 15000
+        end = 20000
+    elif args.part_num == 5:
+        start = 20000
+        end = len(test_data)
+
+    end = 10
+
+    for item in test_data[start:end]:
         context = item["article"]
         passage_encodings_dict = tokenizer(context, truncation=True, max_length=MAXLEN_passage, padding="max_length", return_tensors="pt")
         inp_id = passage_encodings_dict['input_ids']
@@ -94,7 +116,7 @@ def main(args):
             input_ids=inp_id,
             attention_mask=inp_att_msk,
             num_beams=args.num_beams, # Less variability
-            do_sample=True,
+            # do_sample=True,
             # top_k=50,           # This parameter and the one below create more question variability but reduced quality of questions
             # top_p=0.95,          
             max_length=512,
@@ -110,10 +132,10 @@ def main(args):
             all_generated_questions.append(genQu)
             all_contexts.append(context.replace('\n', ' '))
 
-    with open(args.save_path+"gen_questions.txt", 'w') as f:
+    with open(args.save_path+str(args.part_num)+"_gen_questions.txt", 'w') as f:
         f.writelines("%s\n" % qu for qu in all_generated_questions)
 
-    with open(args.save_path+"contexts.txt", 'w') as f:
+    with open(args.save_path+str(args.part_num)+"_contexts.txt", 'w') as f:
         f.writelines("%s\n" % qu for qu in all_contexts)
 
 if __name__ == '__main__':
