@@ -63,16 +63,6 @@ def main(args):
 
     tokenizer = T5Tokenizer.from_pretrained("t5-base")
 
-    def asNum(x):
-        if x=="A":
-            return 0
-        if x=="B":
-            return 1
-        if x=="C":
-            return 2
-        if x=="D":
-            return 3
-
     count = 0
 
     model = torch.load(args.model_path, map_location=device)
@@ -100,7 +90,7 @@ def main(args):
         start = 20000
         end = len(test_data)
 
-    end = 10
+    # end = 10
 
     for item in test_data[start:end]:
         context = item["article"]
