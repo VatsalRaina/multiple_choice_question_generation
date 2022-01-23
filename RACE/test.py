@@ -71,26 +71,14 @@ def main(args):
     all_generated_questions = []
     all_contexts = []
 
+    NUM = 1500
+
     if args.part_num == 0:
         start = 0
         end = len(test_data)
-    elif args.part_num == 1:
-        start = 0
-        end = 5000
-    elif args.part_num == 2:
-        start = 5000
-        end = 10000
-    elif args.part_num == 3:
-        start = 10000
-        end = 15000
-    elif args.part_num == 4:
-        start = 15000
-        end = 20000
-    elif args.part_num == 5:
-        start = 20000
-        end = len(test_data)
-
-    # end = 10
+    else:
+        start = NUM * (args.part_num - 1)
+        end = min( NUM * args.part_num , len(test_data) )
 
     for item in test_data[start:end]:
         context = item["article"]
