@@ -180,7 +180,7 @@ def main(args):
     
     all_logits = get_qa_predictions(filtered_data, models, device, args)
 
-    isValid = get_agreement(all_logits, args.filtr_rate)
+    isValid = get_agreement(all_logits, args.filter_rate)
     final_filtered_data = []
     for sample, keep in zip(filtered_data, isValid):
         if keep:
