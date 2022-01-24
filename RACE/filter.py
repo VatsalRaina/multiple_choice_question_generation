@@ -26,6 +26,7 @@ parser.add_argument('--contexts_path', type=str,  help='Specify path to contexts
 parser.add_argument('--models_dir', type=str, help='Specify path to directory containing all trained QA models')
 parser.add_argument('--save_dir', type=str, help='Specify path to save filtered questions')
 parser.add_argument('--batch_size', type=int, default=4, help='Specify the training batch size')
+parser.add_argument('--filter_rate', type=int, default=3, help='Minimum number of QA models that must agree out of 3')
 
 
 def get_default_device():
@@ -131,17 +132,22 @@ def get_qa_predictions(test_data, models, device, args):
     logits_all_models = np.asarray(logits_all_models)
     return logits_all_models
 
-def get_agreement(all_logits):
+def get_agreement(all_logits, filter_rate):
     isValid = []
     preds = []
     for seed_logits in all_logits:
         class_preds = np.argmax(seed_logits, axis=-1)
         preds.append(class_preds)
     for i in range(len(class_preds)):
-        valid = True
+        correct = 0
         for seed in range(len(all_logits)):
             pred = preds[seed][i]
-            valid = valid and pred==0
+            if pred==0:
+                correct += 1
+        if correct >= filter_rate:
+            valid = True
+        else:
+            valid = False
         isValid.append(valid)
     return isValid
 
@@ -174,7 +180,7 @@ def main(args):
     
     all_logits = get_qa_predictions(filtered_data, models, device, args)
 
-    isValid = get_agreement(all_logits)
+    isValid = get_agreement(all_logits, args.filtr_rate)
     final_filtered_data = []
     for sample, keep in zip(filtered_data, isValid):
         if keep:
